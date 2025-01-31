@@ -5,12 +5,12 @@ import json
 from datetime import datetime
 
 
-def main():
+def main(num_chapters):
     # Create the story_output directory if it doesn't exist
     import os
     os.makedirs("story_output", exist_ok=True)
 
-    premise = open("ideas/foursome.md", "r", encoding="UTF-8").read()
+    premise = open("ideas/new-holidays.md", "r", encoding="UTF-8").read()
 
     # Generate the story using the characters  from the generate_characters module
     character_manager = generate_character_profiles(premise)
@@ -27,12 +27,12 @@ def main():
         "characters": character_manager.to_dict(),
         "chapters": {}
     }
-
-    for title in outlines:
+ 
+    for chapter_number in range(1, len(outlines.keys())+1):
         # Write the chapter with revisions
-        chapter = outlines[title]
-        chapter_number = int(chapter["chapter_number"])
-        chapter_versions = write_chapter_with_revisions(outline=chapter, chapter_num=chapter_number, num_chapters=num_chapters, character_manager=character_manager)
+        chapter = outlines[chapter_number]
+
+        chapter_versions = write_chapter_with_revisions(outline=chapter, chapter_num=chapter_number, num_chapters=len(outlines.keys()), character_manager=character_manager)
 
         # Store chapter and its metadata
         story[f"Chapter_{chapter_number}"] = {
@@ -75,7 +75,7 @@ def main():
             f.write("=" * 50 + "\n\n")
             f.write(story[chapter_key]["final_version"])
             f.write("\n\n")
-    
+
+
 if __name__ == "__main__":
-    num_chapters = 10
-    main()
+    main(num_chapters = 14)

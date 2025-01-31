@@ -145,8 +145,13 @@ def write_chapter_with_revisions(outline: str, chapter_num: int, num_chapters, c
         # Write chapter (incorporating previous feedback if it exists)
         chapter = write_chapter(outline=outline, num_chapters=num_chapters, chapter_num=chapter_num, character_manager=character_manager, previous_feedback=current_feedback)
 
+        if "</think>" in chapter:
+            chapter = chapter.split("</think>")[1]
         # Get feedback on the chapter
         current_feedback = review_chapter(character_manager, chapter, chapter_num,  revision + 1)
+
+        if "</think>" in current_feedback:
+            current_feedback = current_feedback.split("</think>")[1]
 
         # Store this version
         chapter_versions[f"revision_{revision + 1}"] = {

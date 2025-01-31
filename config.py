@@ -15,17 +15,14 @@ def get_config(local_url: str = "http://192.168.1.5:1234/v1") -> Dict:
 
     # Common configuration for all agents
     agent_config = {
-        "seed": 42,
         "temperature": 0.3, # use 0.3 for mistral-nemo-instruct-2407
         "top_p": 0.95,
         "frequency_penalty": 0.3,
         "presence_penalty": 0.2,
         "config_list": config_list,
-        "timeout": 600,
         "cache_seed": None
     }
 
-    
     return agent_config
 
 def get_user_proxy() -> autogen.UserProxyAgent:
