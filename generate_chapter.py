@@ -67,14 +67,15 @@ Editor Feedback:
 {feedback_prompt}
 
 Focus on:
-1. Natural dialogue and character interactions
-2. Vivid but concise descriptions
-3. Smooth scene transitions
-4. Maintaining consistent pacing Write the chapter now
-5. Each chapter MUST contain at least 5000 words
-6. Each chapter MUST be self-contained and complete, while advancing the overall story
-Write the chapter now, ending with the word TERMINATE
-"""
+1. Natural human like dialogue and character interactions.
+2. Vivid but concise descriptions.
+3. Smooth scene transitions.
+4. Each chapter should contain at least 3 significant scenes, each with a clear beginning, middle, and end.
+5. Each scene should be at least 1000 words long.
+6. Each chapter MUST contain at least 5000 words.
+7. Each chapter MUST be self-contained and complete, while advancing the overall story.
+Maintaining consistent pacing write the chapter now.
+End your response with the word TERMINATE"""
 
         get_user_proxy().initiate_chat( manager, message=prompt)
         chapter_content = ""
@@ -122,7 +123,7 @@ Provide specific feedback on:
 
 Pay special attention to character consistency issues.
 If this is revision 5, be extra thorough in your assessment.
-End your review with TERMINATE"""
+END your review with TERMINATE"""
 
         get_user_proxy().initiate_chat(
             manager,
@@ -138,30 +139,32 @@ def write_chapter_with_revisions(outline: str, chapter_num: int, num_chapters, c
     """Write a chapter with multiple revisions based on feedback."""
     chapter_versions = {}
     current_feedback = None
+    max_revisions = 10
 
-    for revision in range(5):
-        print(f"\nWorking on Chapter {chapter_num}, Revision {revision + 1}...")
+    for revision in range(1, max_revisions+1): # plus 1 to include the final revision
+        print(f"\nWorking on Chapter {chapter_num}, Revision {revision}...")
 
         # Write chapter (incorporating previous feedback if it exists)
         chapter = write_chapter(outline=outline, num_chapters=num_chapters, chapter_num=chapter_num, character_manager=character_manager, previous_feedback=current_feedback)
 
         if "</think>" in chapter:
             chapter = chapter.split("</think>")[1]
-        # Get feedback on the chapter
-        current_feedback = review_chapter(character_manager, chapter, chapter_num,  revision + 1)
+        # Get feedback on the chapter, skip if this is the final revision
+        if revision < max_revisions:
+            current_feedback = review_chapter(character_manager, chapter, chapter_num,  revision)
 
         if "</think>" in current_feedback:
             current_feedback = current_feedback.split("</think>")[1]
 
         # Store this version
-        chapter_versions[f"revision_{revision + 1}"] = {
+        chapter_versions[f"revision_{revision}"] = {
             "content": chapter,
             "feedback": current_feedback
         }
 
         # Check if the feedback indicates major issues
         if "excellent" in current_feedback.lower() or "outstanding" in current_feedback.lower():
-            print(f"Chapter {chapter_num} achieved satisfactory quality after {revision + 1} revisions.")
+            print(f"Chapter {chapter_num} achieved satisfactory quality after {revision} revisions.")
             break
 
     return chapter_versions

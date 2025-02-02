@@ -10,7 +10,7 @@ def main(num_chapters):
     import os
     os.makedirs("story_output", exist_ok=True)
 
-    premise = open("ideas/new-holidays.md", "r", encoding="UTF-8").read()
+    premise = open("ideas/A Freedom Holiday.md", "r", encoding="UTF-8").read()
 
     # Generate the story using the characters  from the generate_characters module
     character_manager = generate_character_profiles(premise)
@@ -78,4 +78,5 @@ def main(num_chapters):
 
 
 if __name__ == "__main__":
-    main(num_chapters = 14)
+    num_chapters = input("Number of Chapters:")
+    main(int(num_chapters))

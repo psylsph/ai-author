@@ -1,5 +1,5 @@
 import autogen
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import List, Dict
 from json_repair import json_repair
 import json
@@ -20,6 +20,7 @@ class Chapter:
     setting: str
     tone: str
     conflicts: List[str]
+
 
 chapter_outlines = {}
 
@@ -75,7 +76,9 @@ Include:
 3. Character appearances and interactions
 4. Setting descriptions
 5. Major events or revelations
-6. All your responses should provide your output in a JSON format for ALL chapters.""",
+6. When responding to feedback you MUST provide the updated outline in the same JSON format as the original.
+ALL FIELDS MUST BE PRESENT.
+End your response with the word TERMINATE""",
             llm_config=llm_config
         )
 
@@ -86,7 +89,8 @@ Include:
 3. Suggests improvements for pacing and tension
 4. Please be constructive and specific in your feedback.
 5. Ensure all character appearances and actions align with their established profiles.
-6. Provide your feedback in a JSON format.""",
+6. Provide your feedback in a JSON format.
+End your review with TERMINATE""",
             llm_config=llm_config )
 
     chat_manager = autogen.GroupChat(
@@ -101,7 +105,7 @@ Include:
     get_user_proxy().initiate_chat(
             manager,
             message=prompt,
-            max_turns=2
+            max_turns=3
         )
 
     response = ""
@@ -111,42 +115,44 @@ Include:
         if "outline_writer" in message["name"]:
             response += message["content"]
     
-    with open("chapter_outline.txt", "w") as f:
+    with open("story_output/chapter_outline.txt", "w") as f:
         f.write(response)
         f.flush()
-        exit(1)
 
     # Extract JSON from code blocks
-    json_match = re.search(r'```json(.*?)```', response, re.DOTALL)
-    if json_match:
-        striped_json = json_match.group(1).strip()
-    else:
-        striped_json = response
+    potential_json_list= re.finditer(r'```json(.*?)```', response, re.DOTALL)
 
-    striped_json = striped_json.replace("\n", "")
-    striped_json = striped_json.replace("<0x0A>", "") # erm binary new line returned from some models
-    striped_json = striped_json.replace("TERMINATE", "")
-    try:
-        chapters = json_repair.loads(striped_json)
-        for chapter_data in chapters:
-            print(f"Chapter {chapter_data['chapter_number']}: {chapter_data['title']}")            # Create and add the character
-            if chapter_data['title']:  # Only add if we have at least a name
-                try:
-                    chapter = Chapter(**chapter_data)
-                    chapter_outlines[chapter_data['chapter_number']] = chapter
-                    print(f"Added Chapter: {chapter_data['title']}")
-                except Exception as e:
-                    print(f"Error creating Chapter {chapter_data['title']}: {e}")
-    except json.JSONDecodeError as e:
-        print(f"Error parsing JSON Chapter data: {e}")
-        print("Response was:", response)
-        exit (1) # treat as fatal error
+    for json_match in potential_json_list:
+        if json_match:
+            striped_json = json_match.group().strip()
+        else:
+            striped_json = json_match
 
-    except Exception as e:
-        print(f"Error parsing Chapter data: {e}")
-        print("Response was:", response)
-        exit (1) # treat as fatal error
+        striped_json = striped_json.replace("\n", "")
+        striped_json = striped_json.replace("<0x0A>", "") # erm binary new line returned from some models
+        striped_json = striped_json.replace("TERMINATE", "")
+        striped_json = striped_json.replace("// ... (other chapters)", "")
+        try:
+            chapters = json_repair.loads(striped_json)
+            for chapter_data in chapters:
+                print(f"Chapter {chapter_data['chapter_number']}: {chapter_data['title']}")            # Create and add the character
+                if chapter_data['title']:  # Only add if we have at least a name
+                    try:
+                        for key in chapter_data.keys():
+                            if key not in Chapter.__dataclass_fields__.keys():
+                                del chapter_data[key]
+                        chapter = Chapter(**chapter_data)
+                        chapter_outlines[chapter_data['chapter_number']] = chapter
+                        print(f"Added Chapter: {chapter_data['title']}")
+                    except Exception as e:
+                        print(f"Error creating Chapter {chapter_data['title']}: {e}")
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON Chapter data: {e}")
+            print("Response was:", response)
 
+        except Exception as e:
+            print(f"Error parsing Chapter data: {e}")
+            print("Response was:", response)
 
     # Save individual chapters to separate text files
     for chapter_number, chapter in chapter_outlines.items():
@@ -176,27 +182,31 @@ def read_chapter_outlines_from_files():
     for filename in os.listdir("story_output"):
         if filename.startswith("chapter_outline_") and filename.endswith(".txt"):
             with open(os.path.join("story_output", filename), "r", encoding="UTF-8") as f:
-                content = f.read()
-                chapter_data = {}
-                lines = content.split("\n")
-                chapter_data["chapter_number"] = int(lines[0].split(":")[0].split(" ")[1])
-                chapter_data["title"] = lines[1].strip()
-                key_events_start = lines.index("Key Events:")+1
-                key_events_end = lines.index("Description:")
-                chapter_data["key_events"] = [line.strip() for line in lines[key_events_start:key_events_end]]
-                description_start = key_events_end + 1
-                description_end = lines.index("Character Development:")
-                chapter_data["description"] = [line.strip() for line in lines[description_start:description_end]]
+                try:
+                    content = f.read()
+                    chapter_data = {}
+                    lines = content.split("\n")
+                    chapter_data["chapter_number"] = int(lines[0].split(":")[0].split(" ")[1])
+                    chapter_data["title"] = lines[1].strip()
+                    key_events_start = lines.index("Key Events:")+1
+                    key_events_end = lines.index("Description:")
+                    chapter_data["key_events"] = [line.strip() for line in lines[key_events_start:key_events_end]]
+                    description_start = key_events_end + 1
+                    description_end = lines.index("Character Development:")
+                    chapter_data["description"] = [line.strip() for line in lines[description_start:description_end]]
 
-                character_development = {}
-                characters_start = lines.index("Character Development:")+1
-                characters_end: int = lines.index("Setting:")
-                for line in lines[characters_start:characters_end]:
-                    char, dev = line.strip("- ").split(": ")
-                    character_development[char] = dev
-                chapter_data["character_development"] = character_development
-                chapter_data["setting"] = lines[lines.index("Setting:")+1].strip()
-                chapter_data["tone"] = lines[lines.index("Tone:")+1].strip()
-                chapter_data["conflicts"] = [line.strip("- ").strip() for line in lines[lines.index("Conflicts:")+1:]]
-                chapter_outlines[chapter_data["chapter_number"]] = chapter_data
+                    character_development = {}
+                    characters_start = lines.index("Character Development:")+1
+                    characters_end: int = lines.index("Setting:")
+                    for line in lines[characters_start:characters_end]:
+                        char, dev = line.strip("- ").split(": ")
+                        character_development[char] = dev
+                    chapter_data["character_development"] = character_development
+                    chapter_data["setting"] = lines[lines.index("Setting:")+1].strip()
+                    chapter_data["tone"] = lines[lines.index("Tone:")+1].strip()
+                    chapter_data["conflicts"] = [line.strip("- ").strip() for line in lines[lines.index("Conflicts:")+1:]]
+                    chapter_outlines[chapter_data["chapter_number"]] = chapter_data
+                except Exception as e:
+                   print(f"Error reading {filename}: {e}")
+                   exit (1)
     return chapter_outlines
