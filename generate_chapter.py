@@ -1,170 +1,110 @@
 from typing import Dict
-from webbrowser import get
-import autogen
-import re
+from config import get_llm_response
 
-from character_manager import CharacterManager
-from config import get_config, get_user_proxy
-
-llm_config = get_config()
-
-writer = autogen.AssistantAgent("writer",
-            system_message="""You are a creative writer who:
-1. Transforms outlines into engaging prose
+writer_system_prompt = """You are a novel writer who:
+1. Transforms chapter outlines into human like engaging prose
 2. Creates vivid descriptions and natural dialogue
 3. Maintains consistent character voices
-4. Follows the established plot structure while adding creative details Write in a clear, engaging style without excessive description.
-5. Incorporates feedback to improve chapters""",
-            llm_config=llm_config )
+4. Follows the established plot structure while adding creative details
+5. Write in a clear, engaging style without excessive description.
+6. Writes detailed chapters with at least 3 significant story threads.
+7. Ensures each chapter has a clear beginning, middle, and end."""
         
-reviewer = autogen.AssistantAgent("reviewer",
-            system_message="""You are a literary critic who:
+reviewer_system_prompt = """You are a literary critic who:
 1. Reviews completed chapters for quality and consistency
 2. Suggests improvements for pacing and style
 3. Identifies potential plot holes or character inconsistencies
-4. Ensures each chapter advances the story meaningfully Provide specific, actionable feedback.""",
-            llm_config=llm_config )
+4. Ensures each chapter advances the story meaningfully
+5. Provide specific, actionable feedback, limiting your response to no more than 150 words."""
 
-def get_character_context(character_manager: CharacterManager, chapter_num: int) -> str:
-        """Get current character context for the chapter."""
-        relevant_chars = {
-            name: char for name, char in character_manager.characters.items()
-            if (not char.last_appearance or  # New characters
-                int(re.sub(r'[^0-9]', '', char.last_appearance)) >= chapter_num - 2)  # Recently appeared characters
-        }
+def write_chapter(chapter_outline, chapter_num, num_chapters, character_profiles, current_feedback) -> str:
+    """Transform a chapter outline into prose, incorporating any previous feedback."""
 
-        context = "Current Character Profiles:\n\n"
-        for char in relevant_chars.values():
-            context += f"""
-            Name: {char.name}
-            Role: {char.role}
-            Description: {char.description}
-            Key Traits: {', '.join(char.key_traits)}
-            Recent Activity: Last appeared in Chapter {char.last_appearance or 'N/A'}
+    if not current_feedback:
+        current_feedback = "This is your first draft. Please focus on creating engaging prose."
+    else:
+        current_feedback = f"Here is the feedback from the previous revision: {current_feedback} take this into account when writing this chapter."
 
-            """
-        return context
+    user_prompt = f"""Using the outline below for Chapter {chapter_num}, write a detailed chapter that advances the story
+    for ONLY chapter {chapter_num}:
 
-def write_chapter(outline: str, character_manager: CharacterManager, num_chapters: int, chapter_num: int, previous_feedback: str = None) -> str:
-        """Transform a chapter outline into prose, incorporating any previous feedback."""
+{chapter_outline}
 
-        character_context = get_character_context(character_manager, chapter_num)
-        chat_manager = autogen.GroupChat( agents=[get_user_proxy(), writer], messages=[], max_round=2,
-                                                     speaker_selection_method="auto", allow_repeat_speaker=False)
-        manager = autogen.GroupChatManager(groupchat=chat_manager)
+Character Profiles:
+{character_profiles}
 
-        feedback_prompt = "This is your first draft. Please focus on creating engaging prose."
-        if previous_feedback:
-            feedback_prompt = f"\nPlease address this feedback in your revision:\n{previous_feedback}"
-
-        prompt = f"""Using this outline for Chapter {chapter_num} of {num_chapters}, write a complete chapter in engaging prose:
-
-{outline}
-
-Character Context:
-{character_context}
-Editor Feedback:
-{feedback_prompt}
+{current_feedback}
 
 Focus on:
-1. Natural human like dialogue and character interactions.
-2. Vivid but concise descriptions.
-3. Smooth scene transitions.
-4. Each chapter should contain at least 3 significant scenes, each with a clear beginning, middle, and end.
-5. Each scene should be at least 1000 words long.
-6. Each chapter MUST contain at least 5000 words.
-7. Each chapter MUST be self-contained and complete, while advancing the overall story.
-Maintaining consistent pacing write the chapter now.
-End your response with the word TERMINATE"""
+1. Each story thread MUST aim to be least 1000 words long.
+2. Each chapter MUST contain between 2000 and 4000 words.
+3. Each chapter MUST be self-contained and complete, while advancing the overall story.
+Take your time thinking and write the chapter now.
+"""
+    if chapter_num == num_chapters:
+        user_prompt += "\nThis is the final chapter. Ensure a satisfying conclusion to the story."
 
-        get_user_proxy().initiate_chat( manager, message=prompt)
-        chapter_content = ""
-        for message in chat_manager.messages:
-            if message["name"] == "writer":
-                chapter_content += message["content"]
+    return get_llm_response(system_prompt=writer_system_prompt, user_prompt=user_prompt)
 
-        _update_character_appearances(character_manager=character_manager, content=chapter_content, chapter=str(chapter_num))
-        # Extract the last message from the writer as the chapter
-        return chapter_content
 
-def _update_character_appearances(character_manager: CharacterManager, content: str, chapter: str):
-        """Update character appearances based on chapter content."""
-        for char_name in character_manager.characters.keys():
-            if char_name.lower() in content.lower():
-                character_manager.update_appearance(char_name, chapter)
-                character_manager.track_mention(chapter, char_name)
+def review_chapter(chapter: str, chapter_num: int, revision_num: int, max_revisions:int, character_profiles: str ) -> str:
+    """Review a written chapter and provide feedback."""
 
-def review_chapter(character_manager: CharacterManager, chapter: str, chapter_num: int, revision_num: int) -> str:
-        """Review a written chapter and provide feedback."""
-        character_context = get_character_context(character_manager, chapter_num)
-        chat_manager = autogen.GroupChat(
-            agents=[get_user_proxy(), reviewer],
-            messages=[],
-            max_round=2,
-            speaker_selection_method="auto",
-            allow_repeat_speaker=False
-        )
+    print(f"""\nReviewer: The current word count for the chapter is {len(chapter.split())} words.""")
 
-        manager = autogen.GroupChatManager(groupchat=chat_manager)
+    user_prompt = f"""Review this draft (revision {revision_num}) of Chapter {chapter_num}:
 
-        prompt = f"""Review this draft (revision {revision_num}) of Chapter {chapter_num}:
+Character Profiles:
+{character_profiles}
+
+The current word count for the chapter is {len(chapter.split())} words.
 
 {chapter}
 
-Character Context:
-{character_context}
+Please provide your feedback in a clear and concise manner, formatted as follows:
+- Plot progression and pacing: [Your feedback here]
+- Character development: [Your feedback here]
+- Writing style and dialogue: [Your feedback here]
+- Areas for improvement: [Your feedback here]
+- Word count: [Your feedback here]
+- Character consistency: [Your feedback here]
+- Ready to publish: [Yes/No]
 
-Provide specific feedback on:
-1. Plot progression and pacing
-2. Character development
-3. Writing style and dialogue
-4. Areas for improvement
-5. The number of words, the writer should aiming for at least 5000 words per chapter
+If this is Revision {max_revisions}, be extra thorough in your assessment.
+If the chapter is ready to publish, write "Ready to publish: Yes" at the end of your feedback.
+"""
+    return get_llm_response(system_prompt=reviewer_system_prompt, user_prompt=user_prompt)
 
-Pay special attention to character consistency issues.
-If this is revision 5, be extra thorough in your assessment.
-END your review with TERMINATE"""
 
-        get_user_proxy().initiate_chat(
-            manager,
-            message=prompt
-        )
-        feedback = ""
-        for message in chat_manager.messages:
-            if message["name"] == "reviewer":
-                feedback += message["content"]
-        return feedback
+def generate_chapter(outline: str, chapter_num: int, num_chapters, character_profiles, max_revisions) -> Dict[str, str]:
 
-def write_chapter_with_revisions(outline: str, chapter_num: int, num_chapters, character_manager) -> Dict[str, str]:
-    """Write a chapter with multiple revisions based on feedback."""
-    chapter_versions = {}
-    current_feedback = None
-    max_revisions = 10
+    current_feedback = ""
 
     for revision in range(1, max_revisions+1): # plus 1 to include the final revision
-        print(f"\nWorking on Chapter {chapter_num}, Revision {revision}...")
+        print(f"Writing Chapter {chapter_num}, Revision {revision}...")
 
         # Write chapter (incorporating previous feedback if it exists)
-        chapter = write_chapter(outline=outline, num_chapters=num_chapters, chapter_num=chapter_num, character_manager=character_manager, previous_feedback=current_feedback)
+        chapter = write_chapter(chapter_outline=outline, chapter_num=chapter_num, num_chapters=num_chapters, character_profiles=character_profiles, current_feedback=current_feedback)
 
         if "</think>" in chapter:
             chapter = chapter.split("</think>")[1]
+
         # Get feedback on the chapter, skip if this is the final revision
         if revision < max_revisions:
-            current_feedback = review_chapter(character_manager, chapter, chapter_num,  revision)
+            print(f"Reviewing Chapter {chapter_num}, Revision {revision}...")
+            current_feedback = review_chapter(chapter,  chapter_num,  revision, max_revisions, character_profiles)
+            if "</think>" in current_feedback:
+                current_feedback = current_feedback.split("</think>")[1]
+        else:
+            current_feedback = ""
 
-        if "</think>" in current_feedback:
-            current_feedback = current_feedback.split("</think>")[1]
+        # Print feedback for the writer to review
+        print(f"\nFeedback for Chapter {chapter_num}, Revision {revision}:\n{current_feedback}\n")
 
-        # Store this version
-        chapter_versions[f"revision_{revision}"] = {
-            "content": chapter,
-            "feedback": current_feedback
-        }
-
+        # doesn't seem to by any sensible and repeatable way to check if the chapter is good enough, so we'll just publish it after the final revision
         # Check if the feedback indicates major issues
-        if "excellent" in current_feedback.lower() or "outstanding" in current_feedback.lower():
+        if "Ready to publish: Yes" in current_feedback.lower():
             print(f"Chapter {chapter_num} achieved satisfactory quality after {revision} revisions.")
-            break
+        #    return chapter
 
-    return chapter_versions
+    return chapter

@@ -105,7 +105,7 @@ def clean_text(text):
     
     return text
 
-def process_Story_to_pdf(input_text, output_filename='story.pdf', title='My Story'):
+def process_story_to_pdf(input_text, output_filename='story.pdf', title='My Story'):
     """
     Process text into chapters and create a beautifully formatted PDF Story.
     """
@@ -217,7 +217,7 @@ def process_Story_to_pdf(input_text, output_filename='story.pdf', title='My Stor
 
 if __name__ == "__main__":
     title = input("Title:")
-    text = open("Story_output/final_story.txt", "r", encoding='utf-8').read()
+    text = open("story_output/final_story.txt", "r", encoding='utf-8').read()
     text.replace("TERMINATE", "")
     text.replace("**", "")
-    process_Story_to_pdf(text, 'story_output/final_story.pdf', title)
+    process_story_to_pdf(text, 'story_output/final_story.pdf', title)
