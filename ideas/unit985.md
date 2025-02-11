@@ -12,10 +12,25 @@ Create a Story in my established writing style with these key elements:
 - Stuart Harding is working from home one day in his normal job as a software engineer and there is a knock at the door. Standing at the door is Brigadier General Sir John Marsh, who wants to recruit Stuart for a top-secret mission.
 
 **Act II:**
-- The team slowly begin to recover the missing weapons are various location around the UK.
+- Meet the team
 
 **Act III:**
-- Stuart Harding and his team (Unit 985) are sent on a final mission to a foreign country to try and recover the most important and highly secret weapon. During the final mission Captain Sara Smith is captured by the enemy. Stuart Harding and his team rescue Captain Sara Smith.
+- Weapons and combat training
+
+**Act IV:**
+- First mission in Scotland
+
+**Act V:**
+- The team slowly begin to recover the missing weapons are various location around the UK.
+
+**Act VI:**
+- Stuart Harding and his team (Unit 985) are sent on a final mission to a foreign country to try and recover the most important and highly secret weapon. During the final mission Captain Sara Smith is captured by the enemy. 
+
+**Act VII:**
+- Stuart Harding and his team rescue Captain Sara Smith.
+
+**Act VIII:**
+_ Final find all the weapons and capture the enemy.
 
 **Characters:**
 Stuart Harding: The protagonist; a mid forties man living a normal life is suddenly recruited to run a shadow investigative unit called Unit 985. Stuart Harding has a wife called Kirsty and two children.
