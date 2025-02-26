@@ -3,6 +3,11 @@
 ## Overview
 This Python application generates a story based on a given premise and character profiles. It uses several modules to create chapter outlines and individual chapters, which are then compiled into a final story.
 
+## Installation
+```
+pip install -r requirements.txt
+```
+
 ## Prerequisites
 - Python 3.x
 - Required modules: `generate_characters`, `generate_outlines`, `generate_chapter`

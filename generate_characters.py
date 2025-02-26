@@ -21,6 +21,7 @@ The response should contain the following information for each character:
 - story_arc: string
 
 Ensure that the characters are well-rounded and their roles are clearly defined.
+Provide the charter profiles for all characters in the story.
 """
     
     user_prompt="""You are a character consistency manager who:
@@ -36,9 +37,6 @@ Ensure that the characters are well-rounded and their roles are clearly defined.
 """
     print("Generating character profiles...")  
     character_profiles = get_llm_response(system_prompt, user_prompt)
-
-    if "</think>" in character_profiles:
-        character_profiles = character_profiles.split("</think>")[1]
 
     with open (character_file, "w", encoding="UTF-8") as f:
         f.write(str(character_profiles))

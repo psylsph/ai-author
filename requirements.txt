@@ -1,5 +1,1 @@
-autogen
-autogen-agentchat~=0.2
-flaml[automl]
-json-repair
-reportlab
+openai==1.61.1

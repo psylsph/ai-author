@@ -91,7 +91,7 @@ def clean_text(text):
     # Ensure consistent paragraph separation
     text = re.sub(r'\n{3,}', '\n\n', text)
     
-    # Strip whitespace from the beginning and end
+    # Strip whitespace from the start and end
     text = text.strip()
 
     # remove the double **
@@ -220,4 +220,5 @@ if __name__ == "__main__":
     text = open("story_output/final_story.txt", "r", encoding='utf-8').read()
     text.replace("TERMINATE", "")
     text.replace("**", "")
-    process_story_to_pdf(text, 'story_output/final_story.pdf', title)
+    process_story_to_pdf(text, f"story_output/{title}.pdf", title)
+    print(f"Story saved to {title}.pdf")

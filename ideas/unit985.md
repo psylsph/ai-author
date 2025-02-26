@@ -1,18 +1,12 @@
 **Story Title:** Unit 985
 **Genre:** Action and Adventure Novel
-**Setting:** A small town in southern England, various UK military bases and various unfriendly foreign countries.
-
-Create a Story in my established writing style with these key elements:
-1. It is important that the Story has several key Storylines that intersect and influence each other.
-2. The Story is written in third-person perspective, following the protagonist's thoughts and experiences.
-3. The author employs a mix of dialogue and internal monologue, with particular attention to time progression and how the protagonist's relationships evolve.
-4. The Story is written in a style that is both engaging and thought-provoking, with a focus on character development and emotional depth.
+**Setting:** A small town in southern England, various UK military bases and unfriendly foreign countries.
 
 **Act I:**
 - Stuart Harding is working from home one day in his normal job as a software engineer and there is a knock at the door. Standing at the door is Brigadier General Sir John Marsh, who wants to recruit Stuart for a top-secret mission.
 
 **Act II:**
-- Meet the team
+- Meeting the team
 
 **Act III:**
 - Weapons and combat training
