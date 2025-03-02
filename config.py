@@ -1,8 +1,8 @@
 """Configuration for the book generation system"""
 from openai import OpenAI
 
-#llm_client = OpenAI(base_url="http://192.168.1.5:1234/v1", api_key="lm-studio")
-llm_client = OpenAI(base_url="https://api.deepseek.com/v1", api_key="sk-a93151ad736d46c1aef86014f2ab045a")
+llm_client = OpenAI(base_url="http://192.168.1.5:1234/v1", api_key="lm-studio")
+#llm_client = OpenAI(base_url="https://api.deepseek.com/v1", api_key="")
 #llm_client = OpenAI(base_url="http://127.0.0.1:11434/v1", api_key="ollama")
 #llm_model = "patricide-12b-unslop-mell-v2" does not work well with the current system
 #llm_model = "tifa-deepsex-14b-cot" write gaga rubbish
@@ -15,19 +15,19 @@ llm_client = OpenAI(base_url="https://api.deepseek.com/v1", api_key="sk-a93151ad
 #llm_model = "mistral-nemo-instruct-2407-14.7b-brainstorm-10x-form-3" # wanders off
 #llm_model = "peach-9b-8k-roleplay" # has no idea what it is talking about, can't even do all the character names
 #llm_model = "darksapling-v1.1-ultra-quality-7b"# doesn't complete and wanders off
-#llm_model = "Mistral-Nemo-Instruct-2407-GGUF:latest"
+#llm_model = "Mistral-Nemo-Instruct-2407-GGUF:latest" # 0.3
 #llm_model = "deepseek-r1-distill-llama-8b" gets lost
 #llm_model = "deepseek-r1-distill-qwen-7b" # seems ok, need to check how good the story is
 #llm_model = "hamanasu-15b-instruct" # fails
 #llm_model = "allura-org_bigger-body-8b" #goes in circles
 #llm_model = "nousresearch_deephermes-3-llama-3-8b-preview" # goes in circles @ 0.3
 #llm_model = "openthinker-7b" # goes off topic in chapter 3
-#llm_model = "darkest-muse-v1" # seems pretty good
+llm_model = "darkest-muse-v1" # seems pretty good 1.0, min_p 0.1
 # OmnicromsBrain/Eros_Scribe-7b
 # temperature=0.7, top_k=50, top_p=0.95
-#llm_model = "mistral-small-instruct-2409"
-#llm_model = "archaeo-12b"
-llm_model = "deepseek-chat"
+#llm_model = "phi-4" #0.7
+#llm_model = "archaeo-12b" # 0.2
+#llm_model = "deepseek-chat"
 
 def get_llm_response(system_prompt: str, user_prompt: str):
 
@@ -37,8 +37,8 @@ def get_llm_response(system_prompt: str, user_prompt: str):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ],
-        temperature=1.3,
-        max_completion_tokens=8192,
+        temperature=1.0,
+        max_completion_tokens=6000,
         timeout=6000,
         stream=False)
     
