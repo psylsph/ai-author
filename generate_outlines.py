@@ -215,7 +215,7 @@ def parse_chapter_outlines_from_file(num_chapters):
 
     for line in chapter_outlines_text:
         line = line.strip()
-        if line.lower().find("chapter_number") >= 0 or line.lower().startswith("chapter"):
+        if line.lower().find("chapter_number") >= 0 or line.strip().lower().startswith("chapter"):
             chapter_number = chapter_number + 1
             chapter_outlines[chapter_number] = line + "\n"
         elif chapter_number > 0:
