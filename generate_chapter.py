@@ -44,7 +44,9 @@ Pacing that drags or rushes
 Adding plot elements that contradict the outline
 Losing focus on the chapter's core purpose
 
-Your goal is to produce professional-quality prose that engages readers while staying true to the author's vision and outline."""
+Your goal is to produce professional-quality prose that engages readers while staying true to the author's vision and outline.
+ONLY provide the chapter text, do not write any other text or narrative.
+"""
         
 reviewer_system_prompt = """You are a concise but insightful literary critic specializing in chapter-by-chapter novel analysis. For each chapter review, you will:
 Analyze the following key elements:

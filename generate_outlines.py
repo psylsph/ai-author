@@ -133,7 +133,10 @@ Remember to:
 - Track character locations and timeline
 - Balance viewpoint character coverage
 - Create engaging hooks and transitions
-- Maintain appropriate pacing"""
+- Maintain appropriate pacing
+- ALWAYS provide the outlines for ALL the requested chapters.
+- ONLY provide the outlines, do not write any other text or narrative.
+"""
     
     outline_reviewer_system_prompt = f"""You are an experienced book outline reviewer specializing in analyzing and providing actionable feedback on chapter outlines. Your review process follows these key principles:
 
@@ -183,26 +186,36 @@ Characters:
 Number of Chapters: {num_chapters}
 
 """
-        
         if len(current_feedback) > 0:
             outline_writer_user_prompt += f"\n\nFeedback from the previous revision: {current_feedback}"
 
         print(f"""Generating chapter outlines (revision {revision} of {max_revisions})...""")       
         chapter_outlines = get_llm_response(outline_writer_system_prompt, outline_writer_user_prompt)
 
-        if revision == max_revisions:
+        num_chapters_in_outline = count_chapters(chapter_outlines)
+
+        if revision >= max_revisions and num_chapters_in_outline >= num_chapters:
             with open (chapter_outlines_file, "w", encoding="UTF-8") as f:
                 f.write(chapter_outlines)
             return parse_chapter_outlines_from_file(num_chapters)
-       
+        else:
+            with open (chapter_outlines_file+"-revision-"+str(revision), "w", encoding="UTF-8") as f:
+                f.write(chapter_outlines)
         outline_reviewer_user_prompt = f"""Review the following chapter outline(s): {chapter_outlines}"""
         
         print("Reviewing chapter outlines...")       
         current_feedback = get_llm_response(outline_reviewer_system_prompt, outline_reviewer_user_prompt)
 
+        if num_chapters_in_outline < num_chapters:
+            current_feedback += f"\n\nThe outline is missing chapters. Please add them."
+
         print(current_feedback)
         
     return None
+
+
+def count_chapters(chapter_outlines):
+    return len(re.findall(r'chapter_number', chapter_outlines, re.IGNORECASE))
 
 
 def parse_chapter_outlines_from_file(num_chapters):

@@ -8,7 +8,7 @@ def main(num_chapters):
     import os
     os.makedirs("story_output", exist_ok=True)
 
-    premise = open("ideas/Winter Wonders.md", "r", encoding="UTF-8").read()
+    premise = open("ideas/Snowbound Desires.md", "r", encoding="UTF-8").read()
 
     # Generate the story using the characters from the character_profiles module
     character_profiles = get_character_profiles(premise)
