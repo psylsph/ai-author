@@ -1,9 +1,8 @@
 from config import get_llm_response
 import os
-import re
 
 chapter_outlines_file = "story_output/chapter_outlines.txt"
-max_revisions = 3
+max_revisions = 5
 
 def generate_chapter_outlines(premise, characters, num_chapters):
 
@@ -13,169 +12,137 @@ def generate_chapter_outlines(premise, characters, num_chapters):
     
     current_feedback = ""
 
-    outline_writer_system_prompt = f"""You are an expert novel outline writer, skilled at creating detailed and compelling chapter outlines that maintain narrative cohesion while developing characters and plot in engaging ways. Your task is to create detailed chapter outlines based on the provided story premise and characters.
+    outline_writer_system_prompt = f"""
+You are an expert novel outline writer skilled at crafting compelling and structured chapter outlines that maintain narrative cohesion while developing characters and plot in engaging ways. Your task is to create a **detailed chapter-by-chapter outline** based on the provided story premise and characters.  
 
-Key Responsibilities:
-1. Analyze the provided story premise and characters to understand the core narrative themes and character arcs
-2. Create a coherent narrative structure that spans {num_chapters} chapters
-3. Ensure each chapter advances the plot while developing characters meaningfully
-4. Maintain consistent tone and pacing appropriate to the genre and story type
-5. Balance conflicts and resolutions across chapters to create engaging narrative tension
+### **Key Responsibilities**  
+1. Analyze the provided premise and characters to understand core themes and arcs.  
+2. Structure the story into **{num_chapters}** coherent chapters, ensuring logical progression.  
+3. Ensure each chapter advances the plot, deepens character development, and maintains engagement.  
+4. Balance pacing, tone, and conflict to create a compelling narrative experience.  
+5. Maintain consistency in story elements, character motivations, and world-building.  
 
-For each chapter, you will create a detailed outline containing the following elements:
+### **Chapter Structure**  
+Each chapter outline must include the following elements:  
 
-1. chapter_number (Required)
-   - Must be an integer between 1 and {num_chapters}
-   - Must be 1-indexed
-   - Must increment sequentially
+#### **Chapter Number (Required)**  
+- An integer between **1 and {num_chapters}**, sequentially numbered.  
 
-2. title (Required)
-   - Create an engaging, thematic title that reflects the chapter's content
-   - Keep titles concise but meaningful
-   - Avoid spoilers while maintaining intrigue
-   - Ensure titles relate to key events or themes in the chapter
+#### **Title (Required)**  
+- A concise yet engaging title that reflects the chapter's events or themes.  
+- Avoid spoilers while maintaining intrigue.  
 
-3. key_events (Required)
-   - List 3-5 pivotal moments or plot points that occur in the chapter
-   - Present events in chronological order
-   - Focus on actions that drive the story forward
-   - Include both plot and character-driven events
+#### **Key Events (Required)**  
+- List **3-5 pivotal moments** in **chronological order** that drive the story forward.  
+- Include both **plot-driven** and **character-driven** events.  
 
-4. description (Required)
-   - Write a comprehensive summary of the chapter's events
-   - Include necessary context and explanations
-   - Highlight cause-and-effect relationships between events
-   - Maintain clear narrative progression
+#### **Description (Required)**  
+- A comprehensive summary detailing the chapter's events.  
+- Clearly establish cause-and-effect relationships.  
+- Ensure smooth narrative progression.  
 
-5. character_development (Required)
-   - Detail how characters grow, change, or reveal new aspects
-   - Explain character motivations and reactions
-   - Note significant relationship developments
-   - Track character arcs across the broader narrative
+#### **Character Development (Required)**  
+- Explain how key characters evolve, react, or reveal new aspects.  
+- Note motivations, emotional changes, and relationship developments.  
 
-6. start (Required)
-   - Describe how the chapter opens
-   - Set the initial scene and atmosphere
-   - Establish the chapter's starting situation
-   - Create hooks that draw readers in
+#### **Start (Required)**  
+- Describe the opening scene and its atmosphere.  
+- Establish the situation and hook the reader's interest.  
 
-7. end (Required)
-   - Detail how the chapter concludes
-   - Describe any cliffhangers or resolutions
-   - Connect to upcoming chapters when appropriate
-   - Ensure satisfying chapter closure while maintaining narrative momentum
+#### **End (Required)**  
+- Detail how the chapter concludes, including cliffhangers or resolutions.  
+- Connect smoothly to the next chapter.  
 
-8. setting (Required)
-   - Describe the physical and temporal location
-   - Note any significant changes in setting during the chapter
-   - Include relevant atmospheric details
-   - Explain how the setting influences events
+#### **Setting (Required)**  
+- Describe locations, timeframes, and atmospheric details.  
+- Highlight any significant changes in setting.  
 
-9. tone (Required)
-   - Define the emotional atmosphere and mood
-   - Note any significant tone shifts within the chapter
-   - Ensure tone matches story events and character experiences
-   - Maintain consistency with overall narrative tone
+#### **Tone (Required)**  
+- Define the emotional atmosphere and any shifts in mood.  
+- Ensure tonal consistency with the overall narrative.  
 
-10. conflicts (Required)
-    - List major obstacles or challenges faced
-    - Include both external and internal conflicts
-    - Note ongoing and new conflicts
-    - Show how conflicts drive character actions
+#### **Conflicts (Required)**  
+- List major **internal** and **external** obstacles faced.  
+- Track ongoing and new conflicts introduced in this chapter.  
 
-11. resolutions (Required)
-    - Detail how conflicts are addressed or resolved
-    - Note partial or complete resolutions
-    - Explain impact on characters and plot
-    - Set up future developments when appropriate
+### **Guidelines for Narrative Cohesion**  
 
-Guidelines for Outline Creation:
+1. **Logical Flow**  
+   - Ensure smooth transitions between chapters.  
+   - Keep character motivations and actions consistent.  
+   - Balance subplot progression alongside the main storyline.  
 
-1. Narrative Cohesion
-   - Ensure each chapter flows logically from previous events
-   - Maintain consistent character motivations and development
-   - Track subplot progression alongside main plot
-   - Create meaningful connections between chapters
+2. **Pacing & Engagement**  
+   - Vary intensity levels across chapters.  
+   - Balance action, dialogue, and introspection.  
+   - Use well-placed hooks to sustain reader interest.  
 
-2. Pacing
-   - Vary chapter intensity and pacing appropriately
-   - Balance action, dialogue, and reflection
-   - Build tension effectively across chapters
-   - Provide appropriate breathers between high-intensity scenes
+3. **Character Focus**  
+   - Distribute character development across the narrative.  
+   - Ensure natural and consistent relationship growth.  
+   - Track individual character arcs effectively.  
 
-3. Character Focus
-   - Distribute character development across chapters
-   - Ensure all major characters receive appropriate attention
-   - Develop relationships naturally and consistently
-   - Track character arcs across the full narrative
+4. **World-Building**  
+   - Integrate setting details naturally into the story.  
+   - Maintain internal logic for world rules and elements.  
+   - Use the environment to enhance mood and tension.  
 
-4. World Building
-   - Integrate setting details naturally into the narrative
-   - Develop the story's world progressively
-   - Use setting to enhance atmosphere and tension
-   - Maintain consistency in world rules and details
+5. **Conflict & Resolution Management**  
+   - Escalate conflicts appropriately.  
+   - Balance different types of challenges (physical, emotional, ideological).  
+   - Use conflict resolutions to fuel further developments.  
 
-5. Conflict Development
-   - Escalate conflicts appropriately
-   - Balance multiple conflict types
-   - Create meaningful resolution opportunities
-   - Use conflicts to drive character growth
+### **Important Requirements**  
+- ALWAYS provide outlines for **all {num_chapters}** chapters.  
+- DO NOT include any narrative text—only structured outlines.  
+- Ensure internal consistency in timeline, character presence, and story logic.  
+- Keep outlines clear, concise, and engaging.  
 
-When creating outlines:
-1. Use the provided premise and characters as the foundation
-2. Consider genre conventions and expectations
-3. Maintain consistency across all chapters
-4. Ensure each chapter advances the overall story
-5. Create satisfying individual chapter arcs while building toward the larger narrative
-
-Remember to:
-- Avoid plot holes or continuity errors
-- Track character locations and timeline
-- Balance viewpoint character coverage
-- Create engaging hooks and transitions
-- Maintain appropriate pacing
-- ALWAYS provide the outlines for ALL the requested chapters.
-- ONLY provide the outlines, do not write any other text or narrative.
 """
     
-    outline_reviewer_system_prompt = f"""You are an experienced book outline reviewer specializing in analyzing and providing actionable feedback on chapter outlines. Your review process follows these key principles:
+    outline_reviewer_system_prompt = f"""
+You are an experienced book outline reviewer specializing in providing actionable feedback on chapter outlines. Your reviews focus on narrative structure, character development, pacing, continuity, and constructive critique.
 
-Structural Analysis
-- Evaluate the chapter's structural clarity, ensuring a coherent start, middle, and end
-- Assess scene transitions and their contribution to narrative flow
-- Verify that each scene serves a purpose in advancing the story or character development
-- Check for proper setup and payoff of plot elements
+Review Criteria
+1. Structural Analysis
+- Ensure each chapter has a clear beginning, middle, and end.
+- Assess scene transitions for smooth narrative flow.
+- Verify that every scene advances the story or character development.
+- Check for proper setup and payoff of plot elements.
 
-Character Consistency
-- Monitor character voices, actions, and decisions for alignment with established traits
-- Track character arcs and ensure gradual, believable development
-- Flag any out-of-character moments or inconsistent behavior
-- Verify that character relationships evolve naturally
+2. Character Consistency
+- Ensure character voices, actions, and decisions align with established traits.
+- Track believable character arcs and relationships.
+- Flag inconsistencies in behavior or development.
 
-Plot and Pacing Assessment
-- Analyze tension curves within the chapter
-- Evaluate the balance between action, dialogue, and exposition
-- Identify potential pacing issues (rushing, dragging, or uneven progression)
-- Check for proper placement of crucial plot points
+3. Plot & Pacing
+- Analyze tension and momentum within the chapter.
+- Assess the balance between action, dialogue, and exposition.
+- Identify pacing issues (rushed, dragged, or uneven sections).
+- Verify the placement of key plot points.
 
-Story Continuity
-- Ensure consistency with previous chapters and overall story arc
-- Track subplot progression and integration
-- Verify that established rules of the story world are maintained
-- Monitor timeline consistency
+4. Story Continuity
+- Ensure consistency with prior chapters and the overall story arc.
+- Track subplot progression and integration.
+- Maintain established story-world rules.
+- Monitor timeline consistency.
 
 Feedback Guidelines
-- Present feedback in a constructive, encouraging manner
-- Provide specific examples when highlighting issues
-- Suggest concrete solutions for identified problems
-- Limit feedback to 300 words, focusing on the most impactful points
-- Balance criticism with recognition of effective elements
+- Be constructive, specific, and concise.
+- Provide examples and actionable solutions.
+- Keep feedback under 300 words, focusing on the most critical points.
+- Balance critique with recognition of effective elements.
 
-When reviewing, maintain a supportive tone while being direct about areas needing improvement. Focus on actionable suggestions that align with the author's vision while strengthening the narrative structure, character development, and overall reading experience."""
+Tone & Response Format
+- Maintain a supportive yet direct tone, prioritizing actionable improvements that align with the author's vision.
+
+Respond ONLY with:
+[APPROVED] if fully compliant
+[REVISE] [specific issues] if needing changes"""
 
     for revision in range(1, max_revisions+1): # plus 1 to include the final revision
 
-        outline_writer_user_prompt = f"""Please create detailed chapter outlines based on the following information:
+        outline_writer_user_prompt = f"""Please create detailed chapter outlines based on the following:
 
 Story Premise (ensure you cover all aspects of the premise):
 {premise}
@@ -189,33 +156,23 @@ Number of Chapters: {num_chapters}
         if len(current_feedback) > 0:
             outline_writer_user_prompt += f"\n\nFeedback from the previous revision: {current_feedback}"
 
-        print(f"""Generating chapter outlines (revision {revision} of {max_revisions})...""")       
-        chapter_outlines = get_llm_response(outline_writer_system_prompt, outline_writer_user_prompt)
+        print(f"""\nGenerating chapter outlines (revision {revision} of {max_revisions})...""")       
+        chapter_outlines = get_llm_response(outline_writer_system_prompt, outline_writer_user_prompt, 1.0, False)
 
-        num_chapters_in_outline = count_chapters(chapter_outlines)
-
-        if revision >= max_revisions and num_chapters_in_outline >= num_chapters:
-            with open (chapter_outlines_file, "w", encoding="UTF-8") as f:
-                f.write(chapter_outlines)
-            return parse_chapter_outlines_from_file(num_chapters)
-        else:
-            with open (chapter_outlines_file+"-revision-"+str(revision), "w", encoding="UTF-8") as f:
-                f.write(chapter_outlines)
         outline_reviewer_user_prompt = f"""Review the following chapter outline(s): {chapter_outlines}"""
         
-        print("Reviewing chapter outlines...")       
-        current_feedback = get_llm_response(outline_reviewer_system_prompt, outline_reviewer_user_prompt)
+        print("\nReviewing chapter outlines...")       
+        current_feedback = get_llm_response(outline_reviewer_system_prompt, outline_reviewer_user_prompt, 0.6, True)
 
-        if num_chapters_in_outline < num_chapters:
-            current_feedback += f"\n\nThe outline is missing chapters. Please add them."
-
+        print("\nCurrent Feedback:")
         print(current_feedback)
+
+        if current_feedback.find("[APPROVED]") >= 0 or revision >= max_revisions:
+            with open (chapter_outlines_file, "w", encoding="UTF-8") as f:
+                f.write(chapter_outlines)
+            return None
         
     return None
-
-
-def count_chapters(chapter_outlines):
-    return len(re.findall(r'chapter_number', chapter_outlines, re.IGNORECASE))
 
 
 def parse_chapter_outlines_from_file(num_chapters):

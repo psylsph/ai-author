@@ -26,7 +26,6 @@ Identify key emotional beats and character development moments
 Transform outline points into natural scene progression
 Maintain consistent tone and style throughout
 Ensure all added details serve the story's themes and character arcs
-Review for pacing and narrative flow
 
 You excel at:
 Converting bullet points into organic narrative flow
@@ -45,7 +44,7 @@ Adding plot elements that contradict the outline
 Losing focus on the chapter's core purpose
 
 Your goal is to produce professional-quality prose that engages readers while staying true to the author's vision and outline.
-ONLY provide the chapter text, do not write any other text or narrative.
+ONLY provide the chapter text, do not write any other text or narrative. You should try to provide at least 3000 words.
 """
         
 reviewer_system_prompt = """You are a concise but insightful literary critic specializing in chapter-by-chapter novel analysis. For each chapter review, you will:
@@ -73,7 +72,12 @@ Two sentences highlighting major strengths
 Three specific areas for improvement with actionable solutions
 One closing recommendation for revision priority
 
-Focus on being constructive and specific, avoiding generalities. Each piece of feedback should be immediately actionable by the author. Address both technical and creative aspects while maintaining a supportive, professional tone."""
+Focus on being constructive and specific, avoiding generalities. Each piece of feedback should be immediately actionable by the author. 
+Address both technical and creative aspects while maintaining a supportive, professional tone.
+
+Respond ONLY with:
+[APPROVED] if fully compliant
+[REVISE] [specific issues] if needing changes"""
 
 def write_chapter(chapter_outline:str, chapter_num:int, num_chapters:int, character_profiles:str, current_feedback:str, genre:str, target_audience:str, num_words:int, previous_chapter_summary: str) -> str:
     """Transform a chapter outline into prose, incorporating any previous feedback."""
@@ -101,7 +105,7 @@ Feedback on Previous Draft (if applicable):
     if chapter_num == num_chapters:
         user_prompt += "\nThis is the final chapter. Ensure a satisfying conclusion to the story."
 
-    return get_llm_response(system_prompt=writer_system_prompt, user_prompt=user_prompt)
+    return get_llm_response(system_prompt=writer_system_prompt, user_prompt=user_prompt, temperature=1.0, review=False)
 
 
 def review_chapter(chapter: str, chapter_num: int, num_chapters: int,  character_profiles:str,  genre:str, previous_chapter_summary: str) -> str:
@@ -123,14 +127,15 @@ Please provide your 150-word review following the structured format outlined in 
 If the chapter is NOT ready to publish, provide specific, actionable feedback on how to improve the chapter, and write "Ready to publish: No" at the end of your feedback.
 If the chapter is ready to publish, write "Ready to publish: Yes" at the end of your feedback.
 """
-    return get_llm_response(system_prompt=reviewer_system_prompt, user_prompt=user_prompt)
+    return get_llm_response(system_prompt=reviewer_system_prompt, user_prompt=user_prompt, temperature=0.6, review=True)
 
 
-def generate_chapter(outline: str, chapter_num: int, num_chapters, character_profiles, max_revisions, genre:str, target_audience:str, previous_chapter_summary: str) -> Dict[str, str]:
+def generate_chapter(outline: str, chapter_num: int, num_chapters, character_profiles, max_revisions, genre:str, target_audience:str, previous_chapter_summary: str) -> str:
 
     current_feedback = ""
 
     num_words = 0
+    chapter = ""
 
     for revision in range(1, max_revisions+1): # plus 1 to include the final revision
         print(f"Writing Chapter {chapter_num}, revision {revision}...")
@@ -140,7 +145,7 @@ def generate_chapter(outline: str, chapter_num: int, num_chapters, character_pro
 
         # Get feedback on the chapter, skip if this is the final revision
         if revision < max_revisions:
-            print(f"Reviewing Chapter {chapter_num}, revision {revision}...")
+            print(f"\nReviewing Chapter {chapter_num}, revision {revision}...")
             current_feedback = review_chapter(chapter,  chapter_num,  num_chapters,  character_profiles, genre, previous_chapter_summary)
             num_words = len(chapter.split())
             if num_words < 1750:
@@ -156,7 +161,7 @@ def generate_chapter(outline: str, chapter_num: int, num_chapters, character_pro
 
         # doesn't seem to by any sensible and repeatable way to check if the chapter is good enough, so we'll just publish it after the final revision
         # Check if the feedback indicates major issues, if not, publish the chapter, but alway do at least 3 revisions
-        if "ready to publish: yes" in current_feedback.lower() and revision >= 3 and num_words > 1750:
+        if current_feedback.find("[APPROVED]") >= 0 and revision >= 3 and num_words > 1750:
             print(f"Chapter {chapter_num} achieved satisfactory quality after {revision} revisions.")
             return chapter
 
@@ -178,4 +183,4 @@ Chapter text:
 
 Please provide your 100-word summary following the structured format outlined in your instructions.
 """
-    return get_llm_response(system_prompt=summerizer_system_prompt, user_prompt=user_prompt)
+    return get_llm_response(system_prompt=summerizer_system_prompt, user_prompt=user_prompt, temperature=0.6, review=True)

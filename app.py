@@ -2,7 +2,6 @@ from generate_characters import get_character_profiles
 from generate_outlines import generate_chapter_outlines
 from generate_chapter import generate_chapter, summarize_chapter
 
-
 def main(num_chapters):
     # Create the story_output directory if it doesn't exist
     import os
@@ -28,7 +27,7 @@ def main(num_chapters):
         chapter_outline = outlines[chapter_number]
 
         chapter = generate_chapter(outline=chapter_outline, chapter_num=chapter_number,
-                                   num_chapters=len(outlines.keys()), character_profiles=character_profiles, max_revisions = 10, genre="Erotic Fiction", target_audience="Adults", previous_chapter_summary=summary)
+                                   num_chapters=len(outlines.keys()), character_profiles=character_profiles, max_revisions = 5, genre="Erotic Fiction", target_audience="Adults", previous_chapter_summary=summary)
         
         if (chapter_number == 1):
             summary = "This is the first chapter."
